@@ -1,7 +1,7 @@
 package com.example.Pathology.Entity;
 
 public enum Role {
-    PATIENT,
+    USER,
     ADMIN;
 
     public boolean equalsIgnoreCase(String roleString) {

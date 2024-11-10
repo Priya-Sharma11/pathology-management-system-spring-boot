@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,6 +18,10 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @PostMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody User user) {
         User savedUser = userService.registerUser(user);
@@ -24,31 +29,39 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody User loginUser) {
-        User user = userService.findByEmail(loginUser.getEmail());
+    public String login(@RequestBody User user){
+        return userService.verify(user);
 
-        if (user != null) {
-            System.out.println("User found: " + user.getEmail());
-
-            if (user.getPassword().matches(loginUser.getPassword())){
-                return ResponseEntity.ok("Login successful");
-            } else {
-                System.out.println("Password mismatch for user: " + user.getEmail());
-            }
-        } else {
-            System.out.println("User not found with email: " + loginUser.getEmail());
-        }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
     }
 
 
-    @GetMapping("/{email}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable String email){
-        User user = userService.findByEmail(email);
-        return ResponseEntity.ok(user);
-    }
+//    @PostMapping("/login")
+//    public ResponseEntity<String> login(@RequestBody User loginUser) {
+//        User user = userService.findByEmail(loginUser.getEmail());
+//
+//        if (user != null) {
+//            System.out.println("User found: " + user.getEmail());
+//
+//            if (passwordEncoder.matches(loginUser.getPassword(), user.getPassword())) {
+//                return ResponseEntity.ok("Login successful");
+//            } else {
+//                System.out.println("Password mismatch for user: " + user.getEmail());
+//                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
+//            }
+//        } else {
+//            System.out.println("User not found with email: " + loginUser.getEmail());
+//        }
+//        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
+//    }
 
-    @GetMapping("/{userId}")
+
+//    @GetMapping("/{email}")
+//    public ResponseEntity<User> getUserByEmail(@PathVariable String email){
+//        User user = userService.findByEmail(email);
+//        return ResponseEntity.ok(user);
+//    }
+
+    @GetMapping("/profile/{userId}")
     public ResponseEntity<User> getUserProfile(@PathVariable Long userId) {
         User user = userService.getUserById(userId);
         if(user!=null){

@@ -5,6 +5,10 @@ import com.example.Pathology.Entity.User;
 import com.example.Pathology.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -17,18 +21,44 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    AuthenticationManager authManager;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JWTService jwtService;
+
+
+
     private final List<String> adminEmails = Arrays.asList("admin1@gmail.com", "admin2@gmail.com");
 
     public User registerUser(User user) {
 
-        user.setPassword(user.getPassword());
-        user.setRole(Role.PATIENT);
+        if (adminEmails.contains(user.getUsername())) {
+            user.setRole(Role.ADMIN); // Assign ADMIN role for certain emails
+        } else {
+            user.setRole(Role.USER);  // Default role is USER
+        }
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(Role.USER);
         return userRepository.save(user);
     }
 
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email);
+
+    public String verify(User user) {
+        Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(),user.getPassword()));
+
+        if(authentication.isAuthenticated())return jwtService.generateToken(user.getUsername());
+        else return "Login Failed";
     }
+
+
+//    public User findByEmail(String email) {
+//        return userRepository.findByEmail(email);
+//    }
 
     public User getUserById(Long userId) {
         return userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
@@ -42,7 +72,7 @@ public class UserService {
             existingUser.setName(updatedUser.getName());
             existingUser.setEmail(updatedUser.getEmail());
             if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
-                existingUser.setPassword(updatedUser.getPassword());
+                existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
             }
             return userRepository.save(existingUser);
         }
@@ -52,4 +82,6 @@ public class UserService {
     public void deleteUser(Long userId) {
         userRepository.deleteById(userId);
     }
+
+
 }

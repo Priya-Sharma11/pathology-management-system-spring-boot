@@ -5,9 +5,7 @@ import com.example.Pathology.Service.AppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,8 +25,16 @@ public class AppointmentController {
         return ResponseEntity.ok(appointments);
     }
 
-    @PostMapping
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Appointment>> getUserAppointments(@PathVariable Long userId){
+        List<Appointment> appointments = appointmentService.getAppointmentByUserId(userId);
+        if(appointments.isEmpty()){
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(appointments,HttpStatus.OK);
+    }
 
+    @PostMapping
     public ResponseEntity<Appointment> createAppointment(@RequestBody Appointment appointment) {
         Appointment createdAppointment = appointmentService.createAppointment(appointment);
         return ResponseEntity.ok(createdAppointment);
